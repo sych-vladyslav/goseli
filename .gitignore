@@ -1,0 +1,49 @@
+# Rust
+target/
+**/*.rs.bk
+
+# Node
+node_modules/
+.next/
+out/
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build artifacts
+dist/
+build/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Testing
+coverage/
+.nyc_output/
+
+# Database
+*.sql.bak
+
+# Docker volumes
+docker-data/
+
+# Claude local settings (not shared)
+.claude/settings.local.json
+
+# Compiled sqlx query cache
+.sqlx/
+
+# Temp files
+*.tmp
+*.bak
