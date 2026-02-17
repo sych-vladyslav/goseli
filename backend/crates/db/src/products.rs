@@ -104,52 +104,32 @@ pub async fn count_products(
 
 /// Get product by ID
 pub async fn get_product_by_id(pool: &PgPool, id: Uuid) -> Result<Product> {
-    let product = sqlx::query_as!(
-        Product,
-        r#"
-        SELECT
-            id, store_id, category_id, name, slug, description, short_description,
-            price, compare_at_price, cost_price, sku, stock_quantity,
-            attributes, status as "status: _", is_featured, created_at, updated_at
-        FROM products
-        WHERE id = $1
-        "#,
-        id
-    )
-    .fetch_one(pool)
-    .await?;
+    let product = sqlx::query_as::<_, Product>("SELECT * FROM products WHERE id = $1")
+        .bind(id)
+        .fetch_one(pool)
+        .await?;
 
     Ok(product)
 }
 
 /// Get product by slug for a specific store
 pub async fn get_product_by_slug(pool: &PgPool, store_id: Uuid, slug: &str) -> Result<Product> {
-    let product = sqlx::query_as!(
-        Product,
-        r#"
-        SELECT
-            id, store_id, category_id, name, slug, description, short_description,
-            price, compare_at_price, cost_price, sku, stock_quantity,
-            attributes, status as "status: _", is_featured, created_at, updated_at
-        FROM products
-        WHERE store_id = $1 AND slug = $2
-        "#,
-        store_id,
-        slug
-    )
-    .fetch_one(pool)
-    .await?;
+    let product =
+        sqlx::query_as::<_, Product>("SELECT * FROM products WHERE store_id = $1 AND slug = $2")
+            .bind(store_id)
+            .bind(slug)
+            .fetch_one(pool)
+            .await?;
 
     Ok(product)
 }
 
 /// Get product images
 pub async fn get_product_images(pool: &PgPool, product_id: Uuid) -> Result<Vec<ProductImage>> {
-    let images = sqlx::query_as!(
-        ProductImage,
+    let images = sqlx::query_as::<_, ProductImage>(
         "SELECT * FROM product_images WHERE product_id = $1 ORDER BY sort_order",
-        product_id
     )
+    .bind(product_id)
     .fetch_all(pool)
     .await?;
 
@@ -158,11 +138,10 @@ pub async fn get_product_images(pool: &PgPool, product_id: Uuid) -> Result<Vec<P
 
 /// Get product variants
 pub async fn get_product_variants(pool: &PgPool, product_id: Uuid) -> Result<Vec<ProductVariant>> {
-    let variants = sqlx::query_as!(
-        ProductVariant,
+    let variants = sqlx::query_as::<_, ProductVariant>(
         "SELECT * FROM product_variants WHERE product_id = $1 ORDER BY sort_order",
-        product_id
     )
+    .bind(product_id)
     .fetch_all(pool)
     .await?;
 
@@ -188,34 +167,30 @@ pub async fn create_product(
     let stock_quantity = req.stock_quantity.unwrap_or(0);
     let is_featured = req.is_featured.unwrap_or(false);
 
-    let product = sqlx::query_as!(
-        Product,
+    let product = sqlx::query_as::<_, Product>(
         r#"
         INSERT INTO products (
             store_id, category_id, name, slug, description, short_description,
             price, compare_at_price, cost_price, sku, stock_quantity,
             attributes, status, is_featured
         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
-        RETURNING
-            id, store_id, category_id, name, slug, description, short_description,
-            price, compare_at_price, cost_price, sku, stock_quantity,
-            attributes, status as "status: _", is_featured, created_at, updated_at
+        RETURNING *
         "#,
-        store_id,
-        req.category_id,
-        req.name,
-        slug,
-        req.description,
-        req.short_description,
-        req.price,
-        req.compare_at_price,
-        req.cost_price,
-        req.sku,
-        stock_quantity,
-        attributes,
-        status_str,
-        is_featured
     )
+    .bind(store_id)
+    .bind(req.category_id)
+    .bind(&req.name)
+    .bind(&slug)
+    .bind(&req.description)
+    .bind(&req.short_description)
+    .bind(req.price)
+    .bind(req.compare_at_price)
+    .bind(req.cost_price)
+    .bind(&req.sku)
+    .bind(stock_quantity)
+    .bind(&attributes)
+    .bind(&status_str)
+    .bind(is_featured)
     .fetch_one(pool)
     .await?;
 
@@ -228,10 +203,8 @@ pub async fn update_product(
     id: Uuid,
     req: &UpdateProductRequest,
 ) -> Result<Product> {
-    // First fetch the current product
     let current = get_product_by_id(pool, id).await?;
 
-    // Build update query dynamically
     let name = req.name.as_ref().unwrap_or(&current.name);
     let slug = if req.name.is_some() {
         slugify(name)
@@ -244,8 +217,7 @@ pub async fn update_product(
         .map(|s| s.to_string())
         .unwrap_or_else(|| current.status.to_string());
 
-    let product = sqlx::query_as!(
-        Product,
+    let product = sqlx::query_as::<_, Product>(
         r#"
         UPDATE products SET
             category_id = COALESCE($2, category_id),
@@ -263,26 +235,23 @@ pub async fn update_product(
             is_featured = COALESCE($14, is_featured),
             updated_at = NOW()
         WHERE id = $1
-        RETURNING
-            id, store_id, category_id, name, slug, description, short_description,
-            price, compare_at_price, cost_price, sku, stock_quantity,
-            attributes, status as "status: _", is_featured, created_at, updated_at
+        RETURNING *
         "#,
-        id,
-        req.category_id,
-        name,
-        slug,
-        req.description,
-        req.short_description,
-        req.price,
-        req.compare_at_price,
-        req.cost_price,
-        req.sku,
-        req.stock_quantity,
-        req.attributes,
-        status_str,
-        req.is_featured
     )
+    .bind(id)
+    .bind(req.category_id)
+    .bind(name)
+    .bind(&slug)
+    .bind(&req.description)
+    .bind(&req.short_description)
+    .bind(req.price)
+    .bind(req.compare_at_price)
+    .bind(req.cost_price)
+    .bind(&req.sku)
+    .bind(req.stock_quantity)
+    .bind(&req.attributes)
+    .bind(&status_str)
+    .bind(req.is_featured)
     .fetch_one(pool)
     .await?;
 
@@ -291,12 +260,10 @@ pub async fn update_product(
 
 /// Soft delete a product (set status to archived)
 pub async fn delete_product(pool: &PgPool, id: Uuid) -> Result<()> {
-    sqlx::query!(
-        "UPDATE products SET status = 'archived', updated_at = NOW() WHERE id = $1",
-        id
-    )
-    .execute(pool)
-    .await?;
+    sqlx::query("UPDATE products SET status = 'archived', updated_at = NOW() WHERE id = $1")
+        .bind(id)
+        .execute(pool)
+        .await?;
 
     Ok(())
 }

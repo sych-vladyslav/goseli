@@ -1,40 +1,35 @@
 use axum::{
     extract::{Path, Query, State},
     http::StatusCode,
-    Json, Router,
     routing::get,
+    Json, Router,
 };
-
-#[allow(unused_imports)]
-use axum::routing::{post, put, delete};
 use goseli_core::{
-    dto::{CreateProductRequest, PaginatedResponse, PaginationParams, PaginationMeta, ProductListParams, ProductResponse, UpdateProductRequest},
+    dto::{
+        CreateProductRequest, PaginatedResponse, PaginationMeta, PaginationParams,
+        ProductListParams, ProductResponse, UpdateProductRequest,
+    },
     Result,
 };
 use goseli_db::products;
 use sqlx::PgPool;
 use std::sync::Arc;
 use uuid::Uuid;
+use validator::Validate;
 
-/// List products with pagination and filters
+/// GET /api/v1/products - List products with pagination and filters
 async fn list_products(
     State(state): State<Arc<crate::AppState>>,
-    Query(pagination): Query<PaginationParams>,
-    Query(filters): Query<ProductListParams>,
+    Query(params): Query<ProductListParams>,
 ) -> Result<Json<PaginatedResponse<ProductResponse>>> {
-    // For now, hardcode store_id (will be extracted from auth/domain later)
     let store_id = get_default_store_id(&state.pool).await?;
 
-    let items = products::list_products(
-        &state.pool,
-        store_id,
-        pagination.page,
-        pagination.per_page,
-        &filters,
-    )
-    .await?;
+    let page = params.page.unwrap_or(1);
+    let per_page = params.per_page.unwrap_or(20);
+    let pagination = PaginationParams { page, per_page };
 
-    let total = products::count_products(&state.pool, store_id, &filters).await?;
+    let items = products::list_products(&state.pool, store_id, page, per_page, &params).await?;
+    let total = products::count_products(&state.pool, store_id, &params).await?;
 
     let data: Vec<ProductResponse> = items.into_iter().map(ProductResponse::from).collect();
     let response = PaginatedResponse {
@@ -45,14 +40,12 @@ async fn list_products(
     Ok(Json(response))
 }
 
-/// Get a single product by slug
+/// GET /api/v1/products/:id - Get a single product with images and variants
 async fn get_product(
     State(state): State<Arc<crate::AppState>>,
-    Path(slug): Path<String>,
+    Path(id): Path<Uuid>,
 ) -> Result<Json<ProductResponse>> {
-    let store_id = get_default_store_id(&state.pool).await?;
-
-    let product = products::get_product_by_slug(&state.pool, store_id, &slug).await?;
+    let product = products::get_product_by_id(&state.pool, id).await?;
     let images = products::get_product_images(&state.pool, product.id).await?;
     let variants = products::get_product_variants(&state.pool, product.id).await?;
 
@@ -63,30 +56,35 @@ async fn get_product(
     Ok(Json(response))
 }
 
-/// Create a new product (admin only)
+/// POST /api/v1/products - Create a new product
 async fn create_product(
     State(state): State<Arc<crate::AppState>>,
     Json(req): Json<CreateProductRequest>,
-) -> Result<Json<ProductResponse>> {
-    let store_id = get_default_store_id(&state.pool).await?;
+) -> Result<(StatusCode, Json<ProductResponse>)> {
+    req.validate()
+        .map_err(|e| goseli_core::error::ApiError::validation(e.to_string()))?;
 
+    let store_id = get_default_store_id(&state.pool).await?;
     let product = products::create_product(&state.pool, store_id, &req).await?;
 
-    Ok(Json(ProductResponse::from(product)))
+    Ok((StatusCode::CREATED, Json(ProductResponse::from(product))))
 }
 
-/// Update a product (admin only)
+/// PUT /api/v1/products/:id - Update a product
 async fn update_product(
     State(state): State<Arc<crate::AppState>>,
     Path(id): Path<Uuid>,
     Json(req): Json<UpdateProductRequest>,
 ) -> Result<Json<ProductResponse>> {
+    req.validate()
+        .map_err(|e| goseli_core::error::ApiError::validation(e.to_string()))?;
+
     let product = products::update_product(&state.pool, id, &req).await?;
 
     Ok(Json(ProductResponse::from(product)))
 }
 
-/// Delete a product (soft delete, admin only)
+/// DELETE /api/v1/products/:id - Soft delete a product (archive)
 async fn delete_product(
     State(state): State<Arc<crate::AppState>>,
     Path(id): Path<Uuid>,
@@ -96,12 +94,11 @@ async fn delete_product(
     Ok(StatusCode::NO_CONTENT)
 }
 
-/// Helper to get default store ID (temporary until auth is implemented)
+/// Helper to get default store ID (temporary until domain-based routing)
 async fn get_default_store_id(pool: &PgPool) -> Result<Uuid> {
     let row: (Uuid,) = sqlx::query_as("SELECT id FROM stores LIMIT 1")
         .fetch_one(pool)
         .await?;
-
     Ok(row.0)
 }
 
@@ -109,6 +106,8 @@ async fn get_default_store_id(pool: &PgPool) -> Result<Uuid> {
 pub fn routes() -> Router<Arc<crate::AppState>> {
     Router::new()
         .route("/api/v1/products", get(list_products).post(create_product))
-        .route("/api/v1/products/{slug}", get(get_product))
-        .route("/api/v1/products/{id}", put(update_product).delete(delete_product))
+        .route(
+            "/api/v1/products/{id}",
+            get(get_product).put(update_product).delete(delete_product),
+        )
 }
