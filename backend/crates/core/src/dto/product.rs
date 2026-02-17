@@ -32,6 +32,30 @@ pub struct ProductResponse {
     pub updated_at: OffsetDateTime,
 }
 
+impl From<crate::models::product::Product> for ProductResponse {
+    fn from(p: crate::models::product::Product) -> Self {
+        Self {
+            id: p.id,
+            name: p.name,
+            slug: p.slug,
+            description: p.description,
+            short_description: p.short_description,
+            price: p.price,
+            compare_at_price: p.compare_at_price,
+            status: p.status,
+            is_featured: p.is_featured,
+            sku: p.sku,
+            stock_quantity: p.stock_quantity,
+            attributes: p.attributes,
+            category: None,
+            images: vec![],
+            variants: vec![],
+            created_at: p.created_at,
+            updated_at: p.updated_at,
+        }
+    }
+}
+
 pub type ProductListResponse = PaginatedResponse<ProductResponse>;
 
 #[derive(Debug, Deserialize, Validate)]

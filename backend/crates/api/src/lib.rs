@@ -70,9 +70,8 @@ pub fn build_router(state: Arc<AppState>) -> Router {
     Router::new()
         .route("/health", get(health_check))
         .merge(handlers::auth::routes())
-        // Product/category routes will be merged from backend-commerce's PR
-        // .merge(handlers::products::routes())
-        // .merge(handlers::categories::routes())
+        .merge(handlers::products::routes())
+        .merge(handlers::categories::routes())
         .layer(TraceLayer::new_for_http())
         .layer(cors)
         .with_state(state)

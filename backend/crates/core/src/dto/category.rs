@@ -19,6 +19,22 @@ pub struct CategoryResponse {
     pub updated_at: OffsetDateTime,
 }
 
+impl From<crate::models::category::Category> for CategoryResponse {
+    fn from(c: crate::models::category::Category) -> Self {
+        Self {
+            id: c.id,
+            name: c.name,
+            slug: c.slug,
+            description: c.description,
+            parent_id: c.parent_id,
+            sort_order: c.sort_order,
+            children: vec![],
+            created_at: c.created_at,
+            updated_at: c.updated_at,
+        }
+    }
+}
+
 #[derive(Debug, Deserialize, Validate)]
 pub struct CreateCategoryRequest {
     #[validate(length(min = 1, max = 255))]
