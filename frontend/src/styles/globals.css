@@ -454,7 +454,7 @@
   }
 
   .btn-accent {
-    @apply bg-accent text-white
+    @apply bg-accent-dark text-white
            hover:bg-accent-hover
            focus-visible:outline-accent
            shadow-sm hover:shadow-md;
