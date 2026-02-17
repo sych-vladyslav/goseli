@@ -18,13 +18,17 @@ use sqlx::PgPool;
 use std::sync::Arc;
 use time::OffsetDateTime;
 use uuid::Uuid;
+use validator::Validate;
 
 /// POST /api/v1/auth/register - Create a new user account
 async fn register(
     State(state): State<Arc<crate::AppState>>,
     Json(req): Json<RegisterRequest>,
 ) -> Result<(StatusCode, Json<AuthResponse>)> {
-    // For now, hardcode store_id (will be extracted from domain later)
+    req.validate()
+        .map_err(|e| goseli_core::error::ApiError::validation(e.to_string()))?;
+
+    // TODO: Extract store_id from domain-based routing (P2)
     let store_id = get_default_store_id(&state.pool).await?;
 
     // Check if user already exists
@@ -75,6 +79,9 @@ async fn login(
     State(state): State<Arc<crate::AppState>>,
     Json(req): Json<LoginRequest>,
 ) -> Result<Json<AuthResponse>> {
+    req.validate()
+        .map_err(|e| goseli_core::error::ApiError::validation(e.to_string()))?;
+
     let store_id = get_default_store_id(&state.pool).await?;
 
     // Find user
@@ -95,6 +102,9 @@ async fn login(
             "Account is disabled",
         ));
     }
+
+    // Invalidate all previous refresh tokens for this user
+    tokens::delete_user_refresh_tokens(&state.pool, user.id).await?;
 
     // Generate tokens
     let access_token = generate_access_token(user.id, user.email.clone(), user.role, store_id)?;
@@ -134,15 +144,18 @@ async fn refresh(
         ));
     }
 
-    // Get user
+    // Get user and check if still active
     let user = users::find_user_by_id(&state.pool, user_id)
         .await?
         .ok_or_else(|| goseli_core::error::ApiError::unauthorized("User not found"))?;
 
-    // Delete old refresh token
-    tokens::delete_refresh_token(&state.pool, &token_hash).await?;
+    if !user.is_active {
+        return Err(goseli_core::error::ApiError::forbidden(
+            "Account is disabled",
+        ));
+    }
 
-    // Generate new tokens
+    // Generate new tokens FIRST, then delete old (avoid race condition)
     let access_token =
         generate_access_token(user.id, user.email.clone(), user.role, claims.store_id)?;
     let new_refresh_token =
@@ -152,6 +165,9 @@ async fn refresh(
     let new_token_hash = tokens::hash_token(&new_refresh_token);
     let new_expires_at = OffsetDateTime::now_utc() + time::Duration::days(7);
     tokens::create_refresh_token(&state.pool, user.id, &new_token_hash, new_expires_at).await?;
+
+    // Delete old refresh token AFTER new one is safely stored
+    tokens::delete_refresh_token(&state.pool, &token_hash).await?;
 
     Ok(Json(TokenPair {
         access_token,
@@ -164,6 +180,10 @@ async fn logout(
     State(state): State<Arc<crate::AppState>>,
     Json(req): Json<LogoutRequest>,
 ) -> Result<StatusCode> {
+    // Validate token structure before hitting DB
+    let _ = validate_token(&req.refresh_token)
+        .map_err(|_| goseli_core::error::ApiError::bad_request("Invalid token"))?;
+
     let token_hash = tokens::hash_token(&req.refresh_token);
     tokens::delete_refresh_token(&state.pool, &token_hash).await?;
 
@@ -183,6 +203,7 @@ async fn me(
 }
 
 /// Helper to get default store ID (temporary until domain-based routing)
+// TODO: Remove once domain-based store routing is implemented (P2)
 async fn get_default_store_id(pool: &PgPool) -> Result<Uuid> {
     let row: (Uuid,) = sqlx::query_as("SELECT id FROM stores LIMIT 1")
         .fetch_one(pool)

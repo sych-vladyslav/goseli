@@ -61,6 +61,7 @@ async fn health_check(State(state): State<Arc<AppState>>) -> (StatusCode, Json<H
 }
 
 pub fn build_router(state: Arc<AppState>) -> Router {
+    // TODO: Restrict CORS origins for production (use CORS_ALLOWED_ORIGINS env var)
     let cors = CorsLayer::new()
         .allow_origin(Any)
         .allow_methods(Any)
