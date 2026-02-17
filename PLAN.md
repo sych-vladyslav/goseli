@@ -321,9 +321,53 @@ Every one is essential for launch. Listed in priority order:
 
 ---
 
-## Reusability Architecture
+## Deployment Architecture (Container-per-Store)
 
-The key design: **Store Configuration** drives everything.
+Each store is an **isolated deployment** — its own backend + frontend containers.
+This is the Goseli platform model: one codebase, many deployments.
+
+### How It Works
+```
+                    ┌─────────────────┐
+                    │  Reverse Proxy   │  (Traefik / nginx)
+                    │  Domain Router   │
+                    └────────┬────────┘
+                             │
+            ┌────────────────┼────────────────┐
+            ▼                ▼                ▼
+    ┌──────────────┐ ┌──────────────┐ ┌──────────────┐
+    │ Store A      │ │ Store B      │ │ Store C      │
+    │ backend:3001 │ │ backend:3002 │ │ backend:3003 │
+    │ frontend:3000│ │ frontend:3010│ │ frontend:3020│
+    │ epic-games.co│ │ irri-shop.co │ │ tech-mart.co │
+    └──────┬───────┘ └──────┬───────┘ └──────┬───────┘
+           │                │                │
+           ▼                ▼                ▼
+    ┌─────────────────────────────────────────────┐
+    │          Shared Services                     │
+    │  PostgreSQL (DB per store OR shared + schema)│
+    │  Redis (namespaced keys per store)           │
+    │  Meilisearch (index per store)               │
+    │  Image Storage (local → S3 later)            │
+    └─────────────────────────────────────────────┘
+```
+
+### Key Decisions for Architect
+1. **Container isolation**: Each store = docker-compose with backend + frontend containers
+2. **Database strategy**: Architect must decide between:
+   - **Option A**: Shared DB, `store_id` column on every table (simpler, fewer resources)
+   - **Option B**: Separate DB per store (full isolation, easier backups/migration)
+   - **Option C**: Shared DB with PostgreSQL schemas per store (middle ground)
+3. **Domain routing**: Reverse proxy maps custom domains → store containers
+   - Default: `{slug}.goseli.com` subdomain
+   - Custom: merchant's own domain via DNS CNAME
+4. **Image storage**: Start with local filesystem, migrate to S3/MinIO later
+   - Phase 1: `/uploads/{store_id}/` on local disk
+   - Phase 3+: S3-compatible (MinIO dev, AWS S3 prod)
+5. **Store provisioning**: Admin API to create new stores → spin up containers
+6. **Shared config**: Store configuration (product schema, theme, checkout flow) stored in DB, read at container startup
+
+### Store Configuration (drives product schema per store)
 
 ```json
 {
@@ -332,6 +376,7 @@ The key design: **Store Configuration** drives everything.
     "slug": "epic-boardgames",
     "theme": "classic",
     "currency": "USD",
+    "domain": "epicboardgames.com",
     "product_schema": {
       "type": "boardgame",
       "attributes": [
@@ -353,6 +398,7 @@ This means:
 - **Filters/facets** auto-generated from `filterable` attributes
 - **Theme** is swappable via CSS variables + layout variants
 - **Checkout flow** is configurable (steps can be added/removed)
+- **Each store** runs in its own containers with its own domain
 
 ---
 
