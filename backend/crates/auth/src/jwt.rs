@@ -6,12 +6,12 @@ use uuid::Uuid;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Claims {
-    pub sub: Uuid,           // user_id
+    pub sub: Uuid, // user_id
     pub email: String,
-    pub role: String,        // UserRole as string
+    pub role: String, // UserRole as string
     pub store_id: Uuid,
-    pub exp: i64,            // expiration (Unix timestamp)
-    pub iat: i64,            // issued at (Unix timestamp)
+    pub exp: i64, // expiration (Unix timestamp)
+    pub iat: i64, // issued at (Unix timestamp)
 }
 
 fn get_jwt_secret() -> String {

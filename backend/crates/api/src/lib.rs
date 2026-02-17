@@ -2,12 +2,7 @@
 
 pub mod handlers;
 
-use axum::{
-    extract::State,
-    http::StatusCode,
-    Json, Router,
-    routing::get,
-};
+use axum::{extract::State, http::StatusCode, routing::get, Json, Router};
 use redis::aio::ConnectionManager;
 use sqlx::PgPool;
 use std::sync::Arc;
@@ -28,10 +23,7 @@ struct HealthResponse {
 }
 
 async fn health_check(State(state): State<Arc<AppState>>) -> (StatusCode, Json<HealthResponse>) {
-    let db_ok = sqlx::query("SELECT 1")
-        .execute(&state.pool)
-        .await
-        .is_ok();
+    let db_ok = sqlx::query("SELECT 1").execute(&state.pool).await.is_ok();
 
     let redis_ok = {
         let mut conn = state.redis.clone();
@@ -48,9 +40,21 @@ async fn health_check(State(state): State<Arc<AppState>>) -> (StatusCode, Json<H
     };
 
     let body = HealthResponse {
-        status: if db_ok && redis_ok { "healthy".to_string() } else { "degraded".to_string() },
-        database: if db_ok { "ok".to_string() } else { "error".to_string() },
-        redis: if redis_ok { "ok".to_string() } else { "error".to_string() },
+        status: if db_ok && redis_ok {
+            "healthy".to_string()
+        } else {
+            "degraded".to_string()
+        },
+        database: if db_ok {
+            "ok".to_string()
+        } else {
+            "error".to_string()
+        },
+        redis: if redis_ok {
+            "ok".to_string()
+        } else {
+            "error".to_string()
+        },
     };
 
     (status, Json(body))

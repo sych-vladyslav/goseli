@@ -83,9 +83,11 @@ impl IntoResponse for ApiError {
             ApiError::Unauthorized(msg) => (StatusCode::UNAUTHORIZED, "unauthorized", msg.clone()),
             ApiError::Forbidden(msg) => (StatusCode::FORBIDDEN, "forbidden", msg.clone()),
             ApiError::Conflict(msg) => (StatusCode::CONFLICT, "conflict", msg.clone()),
-            ApiError::Validation(msg) => {
-                (StatusCode::UNPROCESSABLE_ENTITY, "validation_error", msg.clone())
-            }
+            ApiError::Validation(msg) => (
+                StatusCode::UNPROCESSABLE_ENTITY,
+                "validation_error",
+                msg.clone(),
+            ),
             ApiError::Internal(msg) => {
                 tracing::error!("Internal error: {msg}");
                 (

@@ -1,10 +1,13 @@
 use axum::{
     extract::State,
     http::StatusCode,
-    Json, Router,
     routing::{get, post},
+    Json, Router,
 };
-use goseli_auth::{generate_access_token, generate_refresh_token, hash_password, verify_password, validate_token, AuthUser};
+use goseli_auth::{
+    generate_access_token, generate_refresh_token, hash_password, validate_token, verify_password,
+    AuthUser,
+};
 use goseli_core::{
     dto::{AuthResponse, LoginRequest, LogoutRequest, RefreshRequest, RegisterRequest, TokenPair},
     models::user::UserProfile,
@@ -25,8 +28,13 @@ async fn register(
     let store_id = get_default_store_id(&state.pool).await?;
 
     // Check if user already exists
-    if users::find_user_by_email(&state.pool, store_id, &req.email).await?.is_some() {
-        return Err(goseli_core::error::ApiError::bad_request("Email already registered"));
+    if users::find_user_by_email(&state.pool, store_id, &req.email)
+        .await?
+        .is_some()
+    {
+        return Err(goseli_core::error::ApiError::bad_request(
+            "Email already registered",
+        ));
     }
 
     // Hash password
@@ -40,7 +48,8 @@ async fn register(
         &password_hash,
         req.first_name.as_deref(),
         req.last_name.as_deref(),
-    ).await?;
+    )
+    .await?;
 
     // Generate tokens
     let access_token = generate_access_token(user.id, user.email.clone(), user.role, store_id)?;
@@ -75,12 +84,16 @@ async fn login(
 
     // Verify password
     if !verify_password(&req.password, &user.password_hash)? {
-        return Err(goseli_core::error::ApiError::unauthorized("Invalid credentials"));
+        return Err(goseli_core::error::ApiError::unauthorized(
+            "Invalid credentials",
+        ));
     }
 
     // Check if user is active
     if !user.is_active {
-        return Err(goseli_core::error::ApiError::forbidden("Account is disabled"));
+        return Err(goseli_core::error::ApiError::forbidden(
+            "Account is disabled",
+        ));
     }
 
     // Generate tokens
@@ -116,7 +129,9 @@ async fn refresh(
     // Check if token is expired
     if expires_at < OffsetDateTime::now_utc() {
         tokens::delete_refresh_token(&state.pool, &token_hash).await?;
-        return Err(goseli_core::error::ApiError::unauthorized("Refresh token expired"));
+        return Err(goseli_core::error::ApiError::unauthorized(
+            "Refresh token expired",
+        ));
     }
 
     // Get user
@@ -128,8 +143,10 @@ async fn refresh(
     tokens::delete_refresh_token(&state.pool, &token_hash).await?;
 
     // Generate new tokens
-    let access_token = generate_access_token(user.id, user.email.clone(), user.role, claims.store_id)?;
-    let new_refresh_token = generate_refresh_token(user.id, user.email.clone(), user.role, claims.store_id)?;
+    let access_token =
+        generate_access_token(user.id, user.email.clone(), user.role, claims.store_id)?;
+    let new_refresh_token =
+        generate_refresh_token(user.id, user.email.clone(), user.role, claims.store_id)?;
 
     // Store new refresh token hash
     let new_token_hash = tokens::hash_token(&new_refresh_token);

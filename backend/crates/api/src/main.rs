@@ -1,7 +1,7 @@
 // Goseli API Server Entry Point
 
-use std::sync::Arc;
 use std::net::SocketAddr;
+use std::sync::Arc;
 
 use anyhow::Context;
 use dotenvy::dotenv;
@@ -16,9 +16,10 @@ async fn main() -> anyhow::Result<()> {
     dotenv().ok();
 
     tracing_subscriber::registry()
-        .with(EnvFilter::try_from_default_env().unwrap_or_else(|_| {
-            EnvFilter::new("info,goseli_api=debug,tower_http=debug")
-        }))
+        .with(
+            EnvFilter::try_from_default_env()
+                .unwrap_or_else(|_| EnvFilter::new("info,goseli_api=debug,tower_http=debug")),
+        )
         .with(tracing_subscriber::fmt::layer())
         .init();
 
@@ -33,8 +34,8 @@ async fn main() -> anyhow::Result<()> {
         .await
         .context("Failed to connect to PostgreSQL")?;
 
-    let redis_url = std::env::var("REDIS_URL")
-        .unwrap_or_else(|_| "redis://localhost:6379".to_string());
+    let redis_url =
+        std::env::var("REDIS_URL").unwrap_or_else(|_| "redis://localhost:6379".to_string());
 
     let redis_client = redis::Client::open(redis_url)?;
     let redis = ConnectionManager::new(redis_client).await?;
@@ -58,6 +59,8 @@ async fn main() -> anyhow::Result<()> {
 }
 
 async fn shutdown_signal() {
-    tokio::signal::ctrl_c().await.expect("Failed to install CTRL+C handler");
+    tokio::signal::ctrl_c()
+        .await
+        .expect("Failed to install CTRL+C handler");
     tracing::info!("Shutting down gracefully...");
 }

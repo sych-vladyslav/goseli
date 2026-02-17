@@ -46,15 +46,14 @@ where
             ))?;
 
         // Parse Bearer token
-        let token = auth_header
-            .strip_prefix("Bearer ")
-            .ok_or((
-                StatusCode::UNAUTHORIZED,
-                "Invalid Authorization header format".to_string(),
-            ))?;
+        let token = auth_header.strip_prefix("Bearer ").ok_or((
+            StatusCode::UNAUTHORIZED,
+            "Invalid Authorization header format".to_string(),
+        ))?;
 
         // Validate token and extract claims
-        let claims = validate_token(token).map_err(|e| (StatusCode::UNAUTHORIZED, e.to_string()))?;
+        let claims =
+            validate_token(token).map_err(|e| (StatusCode::UNAUTHORIZED, e.to_string()))?;
 
         Ok(AuthUser::from(claims))
     }

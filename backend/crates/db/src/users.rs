@@ -30,26 +30,26 @@ pub async fn create_user(
 }
 
 /// Find user by email within a store
-pub async fn find_user_by_email(pool: &PgPool, store_id: Uuid, email: &str) -> Result<Option<User>> {
-    let user = sqlx::query_as::<_, User>(
-        "SELECT * FROM users WHERE store_id = $1 AND email = $2"
-    )
-    .bind(store_id)
-    .bind(email)
-    .fetch_optional(pool)
-    .await?;
+pub async fn find_user_by_email(
+    pool: &PgPool,
+    store_id: Uuid,
+    email: &str,
+) -> Result<Option<User>> {
+    let user = sqlx::query_as::<_, User>("SELECT * FROM users WHERE store_id = $1 AND email = $2")
+        .bind(store_id)
+        .bind(email)
+        .fetch_optional(pool)
+        .await?;
 
     Ok(user)
 }
 
 /// Find user by ID
 pub async fn find_user_by_id(pool: &PgPool, id: Uuid) -> Result<Option<User>> {
-    let user = sqlx::query_as::<_, User>(
-        "SELECT * FROM users WHERE id = $1"
-    )
-    .bind(id)
-    .fetch_optional(pool)
-    .await?;
+    let user = sqlx::query_as::<_, User>("SELECT * FROM users WHERE id = $1")
+        .bind(id)
+        .fetch_optional(pool)
+        .await?;
 
     Ok(user)
 }

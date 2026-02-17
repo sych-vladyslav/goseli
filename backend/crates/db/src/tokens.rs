@@ -31,7 +31,7 @@ pub async fn find_refresh_token(
     token_hash: &str,
 ) -> Result<Option<(Uuid, OffsetDateTime)>> {
     let result = sqlx::query_as::<_, (Uuid, OffsetDateTime)>(
-        "SELECT user_id, expires_at FROM refresh_tokens WHERE token_hash = $1"
+        "SELECT user_id, expires_at FROM refresh_tokens WHERE token_hash = $1",
     )
     .bind(token_hash)
     .fetch_optional(pool)
@@ -62,7 +62,7 @@ pub async fn delete_user_refresh_tokens(pool: &PgPool, user_id: Uuid) -> Result<
 
 /// Helper to hash a token using SHA-256
 pub fn hash_token(token: &str) -> String {
-    use sha2::{Sha256, Digest};
+    use sha2::{Digest, Sha256};
     let mut hasher = Sha256::new();
     hasher.update(token.as_bytes());
     format!("{:x}", hasher.finalize())
