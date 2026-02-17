@@ -1,0 +1,131 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        UPDATE products SET\n            category_id = COALESCE($2, category_id),\n            name = $3,\n            slug = $4,\n            description = COALESCE($5, description),\n            short_description = COALESCE($6, short_description),\n            price = COALESCE($7, price),\n            compare_at_price = COALESCE($8, compare_at_price),\n            cost_price = COALESCE($9, cost_price),\n            sku = COALESCE($10, sku),\n            stock_quantity = COALESCE($11, stock_quantity),\n            attributes = COALESCE($12, attributes),\n            status = $13,\n            is_featured = COALESCE($14, is_featured),\n            updated_at = NOW()\n        WHERE id = $1\n        RETURNING\n            id, store_id, category_id, name, slug, description, short_description,\n            price, compare_at_price, cost_price, sku, stock_quantity,\n            attributes, status as \"status: _\", is_featured, created_at, updated_at\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "store_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "category_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 3,
+        "name": "name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 4,
+        "name": "slug",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 5,
+        "name": "description",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "short_description",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 7,
+        "name": "price",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 8,
+        "name": "compare_at_price",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 9,
+        "name": "cost_price",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 10,
+        "name": "sku",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 11,
+        "name": "stock_quantity",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 12,
+        "name": "attributes",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 13,
+        "name": "status: _",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 14,
+        "name": "is_featured",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 15,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 16,
+        "name": "updated_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Varchar",
+        "Varchar",
+        "Text",
+        "Varchar",
+        "Int4",
+        "Int4",
+        "Int4",
+        "Varchar",
+        "Int4",
+        "Jsonb",
+        "Varchar",
+        "Bool"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      false,
+      false,
+      true,
+      true,
+      false,
+      true,
+      true,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "20929d385b25eb0a9115cb686502a42731fff96356daccdb7850e7fec476f932"
+}

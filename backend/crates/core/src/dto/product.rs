@@ -54,6 +54,7 @@ pub struct CreateProductRequest {
     pub stock_quantity: Option<i32>,
     pub attributes: Option<serde_json::Value>,
     pub status: Option<ProductStatus>,
+    pub is_featured: Option<bool>,
 }
 
 #[derive(Debug, Deserialize, Validate)]

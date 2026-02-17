@@ -10,7 +10,13 @@ use uuid::Uuid;
 fn slugify(s: &str) -> String {
     s.to_lowercase()
         .chars()
-        .map(|c| if c.is_alphanumeric() || c == '-' { c } else { '-' })
+        .map(|c| {
+            if c.is_alphanumeric() || c == '-' {
+                c
+            } else {
+                '-'
+            }
+        })
         .collect::<String>()
         .split('-')
         .filter(|s| !s.is_empty())
@@ -30,9 +36,7 @@ pub async fn list_products(
     let search_pattern = filters.q.as_ref().map(|s| format!("%{}%", s));
     let status_str = filters.status.as_ref().map(|s| s.to_string());
 
-    let mut query = sqlx::QueryBuilder::new(
-        "SELECT * FROM products WHERE store_id = "
-    );
+    let mut query = sqlx::QueryBuilder::new("SELECT * FROM products WHERE store_id = ");
     query.push_bind(store_id);
 
     if let Some(category_id) = filters.category_id {
@@ -58,10 +62,7 @@ pub async fn list_products(
     query.push(" OFFSET ");
     query.push_bind(offset);
 
-    let products = query
-        .build_query_as::<Product>()
-        .fetch_all(pool)
-        .await?;
+    let products = query.build_query_as::<Product>().fetch_all(pool).await?;
 
     Ok(products)
 }
@@ -75,9 +76,7 @@ pub async fn count_products(
     let search_pattern = filters.q.as_ref().map(|s| format!("%{}%", s));
     let status_str = filters.status.as_ref().map(|s| s.to_string());
 
-    let mut query = sqlx::QueryBuilder::new(
-        "SELECT COUNT(*) FROM products WHERE store_id = "
-    );
+    let mut query = sqlx::QueryBuilder::new("SELECT COUNT(*) FROM products WHERE store_id = ");
     query.push_bind(store_id);
 
     if let Some(category_id) = filters.category_id {
@@ -98,10 +97,7 @@ pub async fn count_products(
         query.push(")");
     }
 
-    let count: (i64,) = query
-        .build_query_as()
-        .fetch_one(pool)
-        .await?;
+    let count: (i64,) = query.build_query_as().fetch_one(pool).await?;
 
     Ok(count.0)
 }
@@ -180,8 +176,15 @@ pub async fn create_product(
     req: &CreateProductRequest,
 ) -> Result<Product> {
     let slug = slugify(&req.name);
-    let status_str = req.status.as_ref().map(|s| s.to_string()).unwrap_or_else(|| "draft".to_string());
-    let attributes = req.attributes.clone().unwrap_or_else(|| serde_json::json!({}));
+    let status_str = req
+        .status
+        .as_ref()
+        .map(|s| s.to_string())
+        .unwrap_or_else(|| "draft".to_string());
+    let attributes = req
+        .attributes
+        .clone()
+        .unwrap_or_else(|| serde_json::json!({}));
     let stock_quantity = req.stock_quantity.unwrap_or(0);
     let is_featured = req.is_featured.unwrap_or(false);
 
@@ -235,7 +238,11 @@ pub async fn update_product(
     } else {
         current.slug.clone()
     };
-    let status_str = req.status.as_ref().map(|s| s.to_string()).unwrap_or_else(|| current.status.to_string());
+    let status_str = req
+        .status
+        .as_ref()
+        .map(|s| s.to_string())
+        .unwrap_or_else(|| current.status.to_string());
 
     let product = sqlx::query_as!(
         Product,

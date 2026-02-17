@@ -41,8 +41,8 @@ docker-data/
 # Claude local settings (not shared)
 .claude/settings.local.json
 
-# Compiled sqlx query cache
-.sqlx/
+# SQLx offline query cache — MUST be committed for CI builds
+# .sqlx/  # Do NOT ignore — needed for SQLX_OFFLINE=true
 
 # Temp files
 *.tmp

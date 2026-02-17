@@ -12,11 +12,11 @@ pub enum ApiError {
     #[error("Bad request: {0}")]
     BadRequest(String),
 
-    #[error("Unauthorized")]
-    Unauthorized,
+    #[error("Unauthorized: {0}")]
+    Unauthorized(String),
 
-    #[error("Forbidden")]
-    Forbidden,
+    #[error("Forbidden: {0}")]
+    Forbidden(String),
 
     #[error("Conflict: {0}")]
     Conflict(String),
@@ -29,6 +29,31 @@ pub enum ApiError {
 
     #[error("Database error")]
     Database(#[from] sqlx::Error),
+}
+
+// Convenience constructors
+impl ApiError {
+    pub fn not_found(msg: impl Into<String>) -> Self {
+        Self::NotFound(msg.into())
+    }
+    pub fn bad_request(msg: impl Into<String>) -> Self {
+        Self::BadRequest(msg.into())
+    }
+    pub fn unauthorized(msg: impl Into<String>) -> Self {
+        Self::Unauthorized(msg.into())
+    }
+    pub fn forbidden(msg: impl Into<String>) -> Self {
+        Self::Forbidden(msg.into())
+    }
+    pub fn internal(msg: impl Into<String>) -> Self {
+        Self::Internal(msg.into())
+    }
+    pub fn conflict(msg: impl Into<String>) -> Self {
+        Self::Conflict(msg.into())
+    }
+    pub fn validation(msg: impl Into<String>) -> Self {
+        Self::Validation(msg.into())
+    }
 }
 
 #[derive(Debug, Serialize)]
@@ -55,20 +80,14 @@ impl IntoResponse for ApiError {
         let (status, code, message) = match &self {
             ApiError::NotFound(msg) => (StatusCode::NOT_FOUND, "not_found", msg.clone()),
             ApiError::BadRequest(msg) => (StatusCode::BAD_REQUEST, "bad_request", msg.clone()),
-            ApiError::Unauthorized => (
-                StatusCode::UNAUTHORIZED,
-                "unauthorized",
-                "Invalid or missing authentication".to_string(),
-            ),
-            ApiError::Forbidden => (
-                StatusCode::FORBIDDEN,
-                "forbidden",
-                "Insufficient permissions".to_string(),
-            ),
+            ApiError::Unauthorized(msg) => (StatusCode::UNAUTHORIZED, "unauthorized", msg.clone()),
+            ApiError::Forbidden(msg) => (StatusCode::FORBIDDEN, "forbidden", msg.clone()),
             ApiError::Conflict(msg) => (StatusCode::CONFLICT, "conflict", msg.clone()),
-            ApiError::Validation(msg) => {
-                (StatusCode::UNPROCESSABLE_ENTITY, "validation_error", msg.clone())
-            }
+            ApiError::Validation(msg) => (
+                StatusCode::UNPROCESSABLE_ENTITY,
+                "validation_error",
+                msg.clone(),
+            ),
             ApiError::Internal(msg) => {
                 tracing::error!("Internal error: {msg}");
                 (

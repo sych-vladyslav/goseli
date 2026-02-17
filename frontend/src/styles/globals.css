@@ -403,7 +403,8 @@
 
   /* Selection */
   ::selection {
-    @apply bg-primary/20 text-neutral-900;
+    background-color: hsl(var(--color-primary) / 0.2);
+    @apply text-neutral-900;
   }
 }
 
@@ -549,31 +550,41 @@
   }
 
   .badge-primary {
-    @apply bg-primary/10 text-primary border border-primary/20;
+    @apply text-primary border;
+    background-color: color-mix(in srgb, var(--color-primary) 10%, transparent);
+    border-color: color-mix(in srgb, var(--color-primary) 20%, transparent);
   }
 
   .badge-secondary {
-    @apply bg-secondary/10 text-secondary border border-secondary/20;
+    @apply text-secondary border;
+    background-color: color-mix(in srgb, var(--color-secondary) 10%, transparent);
+    border-color: color-mix(in srgb, var(--color-secondary) 20%, transparent);
   }
 
   .badge-accent {
-    @apply bg-accent/10 text-accent-dark border border-accent/20;
+    @apply text-accent-dark border;
+    background-color: color-mix(in srgb, var(--color-accent) 10%, transparent);
+    border-color: color-mix(in srgb, var(--color-accent) 20%, transparent);
   }
 
   .badge-success {
-    @apply bg-success-bg text-success-fg border border-success/20;
+    @apply bg-success-bg text-success-fg border;
+    border-color: color-mix(in srgb, var(--color-success) 20%, transparent);
   }
 
   .badge-warning {
-    @apply bg-warning-bg text-warning-fg border border-warning/20;
+    @apply bg-warning-bg text-warning-fg border;
+    border-color: color-mix(in srgb, var(--color-warning) 20%, transparent);
   }
 
   .badge-error {
-    @apply bg-error-bg text-error-fg border border-error/20;
+    @apply bg-error-bg text-error-fg border;
+    border-color: color-mix(in srgb, var(--color-error) 20%, transparent);
   }
 
   .badge-info {
-    @apply bg-info-bg text-info-fg border border-info/20;
+    @apply bg-info-bg text-info-fg border;
+    border-color: color-mix(in srgb, var(--color-info) 20%, transparent);
   }
 
   .badge-neutral {
