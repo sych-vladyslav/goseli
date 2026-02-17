@@ -1,4 +1,7 @@
-// Goseli Auth - Authentication service and JWT middleware
-// Depends on: goseli-core, goseli-db
+pub mod jwt;
+pub mod middleware;
+pub mod password;
 
-// Stub - modules will be implemented in subsequent tasks
+pub use jwt::{Claims, generate_access_token, generate_refresh_token, validate_token};
+pub use middleware::AuthUser;
+pub use password::{hash_password, verify_password};

@@ -13,7 +13,18 @@ pub enum UserRole {
     Customer,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+impl std::fmt::Display for UserRole {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            UserRole::SuperAdmin => write!(f, "super_admin"),
+            UserRole::StoreAdmin => write!(f, "store_admin"),
+            UserRole::Staff => write!(f, "staff"),
+            UserRole::Customer => write!(f, "customer"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, sqlx::FromRow)]
 pub struct User {
     pub id: Uuid,
     pub store_id: Uuid,
