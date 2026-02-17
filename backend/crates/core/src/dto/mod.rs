@@ -1,10 +1,6 @@
-// Request/Response DTOs
-pub mod product;
-pub mod category;
-pub mod common;
 pub mod auth;
+pub mod category;
+pub mod pagination;
+pub mod product;
 
-pub use product::*;
-pub use category::*;
-pub use common::*;
-pub use auth::*;
+pub use pagination::{PaginatedResponse, PaginationParams};
