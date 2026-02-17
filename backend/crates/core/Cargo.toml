@@ -18,6 +18,8 @@ jsonwebtoken = { workspace = true }
 tokio = { workspace = true }
 rand = { workspace = true }
 tracing = { workspace = true }
+sqlx = { workspace = true }
+axum = { workspace = true }
 
 [dev-dependencies]
 mockall = { workspace = true }

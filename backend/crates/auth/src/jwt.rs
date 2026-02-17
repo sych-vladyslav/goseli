@@ -114,10 +114,10 @@ mod tests {
 
     #[test]
     fn test_token_generation_and_validation() {
-        let user_id = Uuid::new_v4();
+        let user_id = Uuid::now_v7();
         let email = "test@example.com".to_string();
         let role = UserRole::Customer;
-        let store_id = Uuid::new_v4();
+        let store_id = Uuid::now_v7();
 
         let token = generate_access_token(user_id, email.clone(), role, store_id).unwrap();
         let claims = validate_token(&token).unwrap();

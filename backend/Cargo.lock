@@ -754,6 +754,7 @@ dependencies = [
  "redis",
  "serde",
  "serde_json",
+ "sqlx",
  "time",
  "tokio",
  "tower",
@@ -767,9 +768,11 @@ dependencies = [
 name = "goseli-auth"
 version = "0.1.0"
 dependencies = [
+ "argon2",
  "axum",
  "goseli-core",
  "goseli-db",
+ "jsonwebtoken",
  "mockall",
  "serde",
  "serde_json",
@@ -786,11 +789,13 @@ name = "goseli-core"
 version = "0.1.0"
 dependencies = [
  "argon2",
+ "axum",
  "jsonwebtoken",
  "mockall",
  "rand",
  "serde",
  "serde_json",
+ "sqlx",
  "thiserror 1.0.69",
  "time",
  "tokio",
@@ -808,6 +813,7 @@ dependencies = [
  "mockall",
  "serde",
  "serde_json",
+ "sha2",
  "sqlx",
  "time",
  "tokio",

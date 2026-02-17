@@ -3,7 +3,6 @@ use axum::{
     extract::FromRequestParts,
     http::{header, request::Parts, StatusCode},
 };
-use goseli_core::error::ApiError;
 use uuid::Uuid;
 
 use crate::jwt::{validate_token, Claims};

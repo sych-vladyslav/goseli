@@ -7,7 +7,7 @@ use axum::{
 use goseli_auth::{generate_access_token, generate_refresh_token, hash_password, verify_password, validate_token, AuthUser};
 use goseli_core::{
     dto::{AuthResponse, LoginRequest, LogoutRequest, RefreshRequest, RegisterRequest, TokenPair},
-    models::user::{UserProfile, UserRole},
+    models::user::UserProfile,
     Result,
 };
 use goseli_db::{tokens, users};

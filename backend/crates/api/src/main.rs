@@ -7,7 +7,6 @@ use anyhow::Context;
 use dotenvy::dotenv;
 use redis::aio::ConnectionManager;
 use sqlx::postgres::PgPoolOptions;
-use tokio::signal;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt, EnvFilter};
 
 use goseli_api::{build_router, AppState};
