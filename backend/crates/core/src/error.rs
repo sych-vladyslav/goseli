@@ -98,3 +98,6 @@ impl IntoResponse for ApiError {
         (status, Json(body)).into_response()
     }
 }
+
+/// Result type alias for API operations
+pub type Result<T> = std::result::Result<T, ApiError>;
