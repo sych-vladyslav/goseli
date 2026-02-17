@@ -27,6 +27,7 @@ jobs:
 
     env:
       DATABASE_URL: postgres://postgres:postgres@localhost:5432/goseli_test
+      SQLX_OFFLINE: true
 
     defaults:
       run:
@@ -41,23 +42,11 @@ jobs:
         with:
           components: rustfmt, clippy
 
-      - name: Cache Cargo registry
-        uses: actions/cache@v4
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
         with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-cargo-registry-
-
-      - name: Cache Cargo build
-        uses: actions/cache@v4
-        with:
-          path: backend/target
-          key: ${{ runner.os }}-cargo-build-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-cargo-build-
+          workspaces: backend
+          cache-on-failure: true
 
       - name: Check formatting
         run: cargo fmt --check
@@ -72,10 +61,6 @@ jobs:
     name: Frontend Tests
     runs-on: ubuntu-latest
 
-    defaults:
-      run:
-        working-directory: frontend
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -85,33 +70,28 @@ jobs:
         with:
           node-version: '18'
           cache: 'yarn'
-          cache-dependency-path: frontend/yarn.lock
-
-      - name: Cache node_modules
-        uses: actions/cache@v4
-        with:
-          path: frontend/node_modules
-          key: ${{ runner.os }}-node-modules-${{ hashFiles('frontend/yarn.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-node-modules-
+          cache-dependency-path: yarn.lock
 
       - name: Cache Next.js build
         uses: actions/cache@v4
         with:
           path: frontend/.next/cache
-          key: ${{ runner.os }}-nextjs-${{ hashFiles('frontend/yarn.lock') }}-${{ hashFiles('frontend/**/*.js', 'frontend/**/*.jsx', 'frontend/**/*.ts', 'frontend/**/*.tsx') }}
+          key: ${{ runner.os }}-nextjs-${{ hashFiles('yarn.lock') }}-${{ hashFiles('frontend/**/*.js', 'frontend/**/*.jsx', 'frontend/**/*.ts', 'frontend/**/*.tsx') }}
           restore-keys: |
-            ${{ runner.os }}-nextjs-${{ hashFiles('frontend/yarn.lock') }}-
+            ${{ runner.os }}-nextjs-${{ hashFiles('yarn.lock') }}-
             ${{ runner.os }}-nextjs-
 
       - name: Install dependencies
-        run: yarn install --frozen-lockfile
+        run: yarn install --frozen-lockfile --ignore-engines
 
       - name: Run linter
+        working-directory: frontend
         run: yarn lint
 
       - name: Type check
+        working-directory: frontend
         run: yarn type-check
 
       - name: Build production
+        working-directory: frontend
         run: yarn build
