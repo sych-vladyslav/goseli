@@ -1,0 +1,83 @@
+[workspace]
+members = [
+    "crates/api",
+    "crates/core",
+    "crates/db",
+    "crates/auth",
+    "crates/storage",
+]
+resolver = "2"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+authors = ["Goseli Team"]
+license = "MIT"
+
+[workspace.dependencies]
+# Async runtime
+tokio = { version = "1.41", features = ["full"] }
+
+# Web framework
+axum = { version = "0.7", features = ["macros"] }
+tower = "0.5"
+tower-http = { version = "0.6", features = ["cors", "trace", "compression-full"] }
+
+# Database
+sqlx = { version = "0.8", features = ["runtime-tokio", "postgres", "uuid", "time", "json"] }
+
+# Redis
+redis = { version = "0.27", features = ["tokio-comp", "connection-manager"] }
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# UUID
+uuid = { version = "1.11", features = ["v7", "serde"] }
+
+# Time
+time = { version = "0.3", features = ["serde"] }
+
+# Authentication
+argon2 = "0.5"
+jsonwebtoken = "9.3"
+
+# HTTP client
+reqwest = { version = "0.12", features = ["json"] }
+
+# Tracing
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+
+# Error handling
+thiserror = "1.0"
+anyhow = "1.0"
+
+# Environment
+dotenvy = "0.15"
+
+# Validation
+validator = { version = "0.18", features = ["derive"] }
+
+# Random
+rand = "0.8"
+
+# Slug generation
+slug = "0.1"
+
+# File system
+tokio-util = { version = "0.7", features = ["io"] }
+
+# Test dependencies
+mockall = "0.13"
+
+[profile.dev]
+opt-level = 0
+debug = true
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+strip = true

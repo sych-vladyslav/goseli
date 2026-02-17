@@ -1,0 +1,35 @@
+[package]
+name = "goseli-api"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "goseli-api"
+path = "src/main.rs"
+
+[dependencies]
+# Internal dependencies
+goseli-core = { path = "../core" }
+goseli-db = { path = "../db" }
+goseli-auth = { path = "../auth" }
+goseli-storage = { path = "../storage" }
+
+# From workspace
+axum = { workspace = true }
+tower = { workspace = true }
+tower-http = { workspace = true }
+tokio = { workspace = true }
+redis = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+uuid = { workspace = true }
+time = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+dotenvy = { workspace = true }
+anyhow = { workspace = true }
+
+[dev-dependencies]
+mockall = { workspace = true }

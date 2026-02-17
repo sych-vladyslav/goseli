@@ -28,11 +28,19 @@ and checkout flow are all configurable per-store — the engine stays the same.
 - One database to operate instead of two
 - PostgreSQL's JSONB performance matches MongoDB for our query patterns
 
-### System State (Auto-detected)
-- **Installed**: git, PostgreSQL 15, Redis 7, Rust 1.90, Node 18, Yarn 1.22, SSH keys
-- **Need to install**: GitHub CLI (gh), sqlx-cli, npm/npx, Meilisearch
-- **Docker**: Not installed yet — will add docker-compose.yml for portable setup + future deployments
-- **Resources**: 22GB RAM, 57GB free disk — plenty of headroom
+### System State
+- **Installed**: git, gh 2.23, PostgreSQL 15, Redis 7, Rust 1.90, Node 18, Yarn 1.22, npm 9.2, tmux 3.3a, sqlx-cli 0.8.6, SSH keys (ed25519)
+- **GitHub**: `github.com/sych-vladyslav/goseli` (private repo, main branch)
+- **Database**: `goseli_dev` on local PostgreSQL
+- **Docker**: docker-compose.yml ready (PG, Redis, Meilisearch, MinIO)
+- **Resources**: 22GB RAM, 57GB free disk
+
+### Architect's Decisions (Phase 1)
+- **DB Strategy**: `store_id` column on every table (Phase 1) → schema-per-store isolation (Phase 3)
+- **Container Model**: Single local dev now; each production store = own backend + frontend containers
+- **Store Identity**: `STORE_ID` + `STORE_SLUG` env vars → load config from DB at startup → `Arc<StoreConfig>`
+- **Image Storage**: Local filesystem `uploads/{store_id}/` (Phase 1) → S3/MinIO (Phase 3+)
+- **Domain Routing**: Traefik reverse proxy (Phase 4); `{slug}.goseli.com` subdomains + custom domains via CNAME
 
 ---
 

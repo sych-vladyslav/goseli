@@ -1,0 +1,459 @@
+openapi: 3.1.0
+info:
+  title: Goseli API
+  description: Goseli e-commerce platform API — "Go Sell It"
+  version: 0.1.0
+  contact:
+    name: Goseli Team
+
+servers:
+  - url: http://localhost:3001
+    description: Local development
+
+paths:
+  /health:
+    get:
+      summary: Health check
+      operationId: healthCheck
+      tags: [system]
+      responses:
+        "200":
+          description: Service healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, example: ok }
+                  database: { type: string, example: connected }
+                  redis: { type: string, example: connected }
+
+  /api/v1/store/config:
+    get:
+      summary: Get store configuration
+      operationId: getStoreConfig
+      tags: [store]
+      responses:
+        "200":
+          description: Store configuration
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/StoreConfig" }
+
+  /api/v1/auth/register:
+    post:
+      summary: Register a new customer
+      operationId: register
+      tags: [auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/RegisterRequest" }
+      responses:
+        "201":
+          description: User registered
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AuthResponse" }
+        "409":
+          description: Email already registered
+
+  /api/v1/auth/login:
+    post:
+      summary: Login
+      operationId: login
+      tags: [auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/LoginRequest" }
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AuthResponse" }
+        "401":
+          description: Invalid credentials
+
+  /api/v1/auth/refresh:
+    post:
+      summary: Refresh access token
+      operationId: refreshToken
+      tags: [auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [refresh_token]
+              properties:
+                refresh_token: { type: string }
+      responses:
+        "200":
+          description: Tokens refreshed
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TokenPair" }
+
+  /api/v1/auth/logout:
+    post:
+      summary: Logout (revoke refresh token)
+      operationId: logout
+      tags: [auth]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [refresh_token]
+              properties:
+                refresh_token: { type: string }
+      responses:
+        "204":
+          description: Logged out
+
+  /api/v1/auth/me:
+    get:
+      summary: Get current user profile
+      operationId: getMe
+      tags: [auth]
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/User" }
+
+  /api/v1/products:
+    get:
+      summary: List products
+      operationId: listProducts
+      tags: [products]
+      parameters:
+        - name: page
+          in: query
+          schema: { type: integer, default: 1 }
+        - name: per_page
+          in: query
+          schema: { type: integer, default: 20, maximum: 100 }
+        - name: status
+          in: query
+          schema: { type: string, enum: [draft, active, archived] }
+        - name: category_id
+          in: query
+          schema: { type: string, format: uuid }
+        - name: sort
+          in: query
+          schema: { type: string, enum: [price_asc, price_desc, created_at_desc, name_asc] }
+        - name: q
+          in: query
+          schema: { type: string }
+          description: Search query (matches product name)
+      responses:
+        "200":
+          description: Paginated product list
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ProductListResponse" }
+    post:
+      summary: Create a product
+      operationId: createProduct
+      tags: [products]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreateProductRequest" }
+      responses:
+        "201":
+          description: Product created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Product" }
+
+  /api/v1/products/{slug}:
+    get:
+      summary: Get product by slug
+      operationId: getProductBySlug
+      tags: [products]
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Product detail
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Product" }
+        "404":
+          description: Product not found
+
+  /api/v1/products/{id}:
+    put:
+      summary: Update product
+      operationId: updateProduct
+      tags: [products]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/UpdateProductRequest" }
+      responses:
+        "200":
+          description: Product updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Product" }
+    delete:
+      summary: Archive product
+      operationId: deleteProduct
+      tags: [products]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "204":
+          description: Product archived
+
+  /api/v1/categories:
+    get:
+      summary: List categories
+      operationId: listCategories
+      tags: [categories]
+      responses:
+        "200":
+          description: Category tree
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Category" }
+    post:
+      summary: Create category
+      operationId: createCategory
+      tags: [categories]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreateCategoryRequest" }
+      responses:
+        "201":
+          description: Category created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Category" }
+
+  /api/v1/categories/{id}:
+    put:
+      summary: Update category
+      operationId: updateCategory
+      tags: [categories]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreateCategoryRequest" }
+      responses:
+        "200":
+          description: Category updated
+    delete:
+      summary: Delete category
+      operationId: deleteCategory
+      tags: [categories]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "204":
+          description: Category deleted
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    StoreConfig:
+      type: object
+      properties:
+        name: { type: string }
+        slug: { type: string }
+        currency: { type: string }
+        theme: { type: string }
+        product_schema: { type: object }
+        features: { type: object }
+
+    RegisterRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email: { type: string, format: email }
+        password: { type: string, minLength: 8 }
+        first_name: { type: string }
+        last_name: { type: string }
+
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email: { type: string, format: email }
+        password: { type: string }
+
+    AuthResponse:
+      type: object
+      properties:
+        user: { $ref: "#/components/schemas/User" }
+        access_token: { type: string }
+        refresh_token: { type: string }
+
+    TokenPair:
+      type: object
+      properties:
+        access_token: { type: string }
+        refresh_token: { type: string }
+
+    User:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        email: { type: string }
+        first_name: { type: string }
+        last_name: { type: string }
+        role: { type: string, enum: [super_admin, store_admin, staff, customer] }
+        created_at: { type: string, format: date-time }
+
+    Product:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        slug: { type: string }
+        description: { type: string }
+        short_description: { type: string }
+        price: { type: integer, description: "Price in cents" }
+        compare_at_price: { type: integer }
+        status: { type: string, enum: [draft, active, archived] }
+        is_featured: { type: boolean }
+        sku: { type: string }
+        stock_quantity: { type: integer }
+        attributes: { type: object }
+        category: { $ref: "#/components/schemas/CategorySummary" }
+        images: { type: array, items: { $ref: "#/components/schemas/ProductImage" } }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+
+    ProductImage:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        url: { type: string }
+        alt_text: { type: string }
+        sort_order: { type: integer }
+        is_primary: { type: boolean }
+
+    CreateProductRequest:
+      type: object
+      required: [name, price]
+      properties:
+        name: { type: string }
+        description: { type: string }
+        short_description: { type: string }
+        price: { type: integer }
+        compare_at_price: { type: integer }
+        cost_price: { type: integer }
+        sku: { type: string }
+        category_id: { type: string, format: uuid }
+        stock_quantity: { type: integer, default: 0 }
+        attributes: { type: object }
+        status: { type: string, enum: [draft, active], default: draft }
+
+    UpdateProductRequest:
+      type: object
+      properties:
+        name: { type: string }
+        description: { type: string }
+        short_description: { type: string }
+        price: { type: integer }
+        compare_at_price: { type: integer }
+        cost_price: { type: integer }
+        sku: { type: string }
+        category_id: { type: string, format: uuid }
+        stock_quantity: { type: integer }
+        attributes: { type: object }
+        status: { type: string, enum: [draft, active, archived] }
+        is_featured: { type: boolean }
+
+    ProductListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items: { $ref: "#/components/schemas/Product" }
+        pagination: { $ref: "#/components/schemas/PaginationMeta" }
+
+    PaginationMeta:
+      type: object
+      properties:
+        page: { type: integer }
+        per_page: { type: integer }
+        total_items: { type: integer }
+        total_pages: { type: integer }
+
+    Category:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        slug: { type: string }
+        description: { type: string }
+        parent_id: { type: string, format: uuid }
+        sort_order: { type: integer }
+        children: { type: array, items: { $ref: "#/components/schemas/Category" } }
+
+    CategorySummary:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        slug: { type: string }
+
+    CreateCategoryRequest:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string }
+        description: { type: string }
+        parent_id: { type: string, format: uuid }
+        sort_order: { type: integer, default: 0 }

@@ -1,0 +1,21 @@
+[package]
+name = "goseli-storage"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[dependencies]
+# Internal dependencies
+goseli-core = { path = "../core" }
+
+# From workspace
+tokio = { workspace = true }
+tokio-util = { workspace = true }
+uuid = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+serde = { workspace = true }
+
+[dev-dependencies]
+mockall = { workspace = true }
