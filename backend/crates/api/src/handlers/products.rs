@@ -107,7 +107,7 @@ pub fn routes() -> Router<Arc<crate::AppState>> {
     Router::new()
         .route("/api/v1/products", get(list_products).post(create_product))
         .route(
-            "/api/v1/products/{id}",
+            "/api/v1/products/:id",
             get(get_product).put(update_product).delete(delete_product),
         )
 }

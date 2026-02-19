@@ -27,9 +27,9 @@ export default async function HomePage() {
       {/* Hero Section */}
       <section className="bg-gradient-to-r from-primary to-secondary text-white py-20">
         <div className="container-custom">
-          <h1 className="text-5xl font-bold mb-4">Welcome to Our Store</h1>
-          <p className="text-xl mb-8 opacity-90">
-            Discover our curated selection of products.
+          <h1 className="text-5xl font-bold mb-4 text-white">Welcome to Goseli</h1>
+          <p className="text-xl mb-8 text-white opacity-90">
+            Discover quality products at great prices.
           </p>
           <Link href="/products" className="btn btn-accent btn-lg">
             Shop Now

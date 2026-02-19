@@ -84,7 +84,7 @@ pub fn routes() -> Router<Arc<crate::AppState>> {
             get(list_categories).post(create_category),
         )
         .route(
-            "/api/v1/categories/{id}",
+            "/api/v1/categories/:id",
             get(get_category)
                 .put(update_category)
                 .delete(delete_category),
