@@ -215,14 +215,13 @@ pub async fn update_item_quantity(
     quantity: i32,
 ) -> Result<CartItem> {
     // Get item to check stock
-    let item = sqlx::query_as::<_, CartItem>(
-        "SELECT * FROM cart_items WHERE id = $1 AND cart_id = $2",
-    )
-    .bind(item_id)
-    .bind(cart_id)
-    .fetch_optional(pool)
-    .await?
-    .ok_or_else(|| ApiError::not_found("Cart item not found"))?;
+    let item =
+        sqlx::query_as::<_, CartItem>("SELECT * FROM cart_items WHERE id = $1 AND cart_id = $2")
+            .bind(item_id)
+            .bind(cart_id)
+            .fetch_optional(pool)
+            .await?
+            .ok_or_else(|| ApiError::not_found("Cart item not found"))?;
 
     // Check stock availability
     let (available_stock, product_name) = if let Some(vid) = item.variant_id {
@@ -291,18 +290,12 @@ pub async fn clear_cart(pool: &PgPool, cart_id: Uuid) -> Result<()> {
 }
 
 /// Merge guest cart into user cart on login
-pub async fn merge_carts(
-    pool: &PgPool,
-    guest_cart_id: Uuid,
-    user_cart_id: Uuid,
-) -> Result<()> {
+pub async fn merge_carts(pool: &PgPool, guest_cart_id: Uuid, user_cart_id: Uuid) -> Result<()> {
     // Get all items from guest cart
-    let guest_items = sqlx::query_as::<_, CartItem>(
-        "SELECT * FROM cart_items WHERE cart_id = $1",
-    )
-    .bind(guest_cart_id)
-    .fetch_all(pool)
-    .await?;
+    let guest_items = sqlx::query_as::<_, CartItem>("SELECT * FROM cart_items WHERE cart_id = $1")
+        .bind(guest_cart_id)
+        .fetch_all(pool)
+        .await?;
 
     // For each guest item, add to user cart (UPSERT will handle duplicates)
     for item in guest_items {

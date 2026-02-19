@@ -57,7 +57,10 @@ async fn get_cart(
     // Set session cookie if guest
     let jar = if user_id.is_none() {
         if let Some(sid) = session_id {
-            let cookie = format!("{}={}; Path=/; HttpOnly; SameSite=Lax; Max-Age=2592000", SESSION_COOKIE_NAME, sid);
+            let cookie = format!(
+                "{}={}; Path=/; HttpOnly; SameSite=Lax; Max-Age=2592000",
+                SESSION_COOKIE_NAME, sid
+            );
             jar.add(axum_extra::extract::cookie::Cookie::parse(cookie).unwrap())
         } else {
             jar
@@ -107,7 +110,10 @@ async fn add_to_cart(
     // Set session cookie if guest
     let jar = if user_id.is_none() {
         if let Some(sid) = session_id {
-            let cookie = format!("{}={}; Path=/; HttpOnly; SameSite=Lax; Max-Age=2592000", SESSION_COOKIE_NAME, sid);
+            let cookie = format!(
+                "{}={}; Path=/; HttpOnly; SameSite=Lax; Max-Age=2592000",
+                SESSION_COOKIE_NAME, sid
+            );
             jar.add(axum_extra::extract::cookie::Cookie::parse(cookie).unwrap())
         } else {
             jar
