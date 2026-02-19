@@ -6,8 +6,11 @@ import type {
   PaginatedResponse,
   ProductListParams,
   Category,
+  CartResponse,
+  AddToCartRequest,
+  UpdateCartItemRequest,
 } from '@/lib/types';
-import { fetchApi } from '@/lib/api';
+import { fetchApi, addToCart as apiAddToCart, updateCartItem as apiUpdateCartItem, removeCartItem as apiRemoveCartItem, clearCart as apiClearCart } from '@/lib/api';
 
 function buildQueryString(params: Record<string, unknown>): string {
   const searchParams = new URLSearchParams();
@@ -43,4 +46,43 @@ export function useCategories() {
     '/api/v1/categories',
     clientFetcher,
   );
+}
+
+export function useCart() {
+  const { data, error, isLoading, mutate } = useSWR<CartResponse>(
+    '/api/v1/cart',
+    (url: string) => fetchApi<CartResponse>(url, { credentials: 'include' }),
+  );
+
+  const addToCart = async (request: AddToCartRequest) => {
+    const updatedCart = await apiAddToCart(request);
+    await mutate(updatedCart, false);
+    return updatedCart;
+  };
+
+  const updateCartItem = async (itemId: string, request: UpdateCartItemRequest) => {
+    const updatedCart = await apiUpdateCartItem(itemId, request);
+    await mutate(updatedCart, false);
+    return updatedCart;
+  };
+
+  const removeCartItem = async (itemId: string) => {
+    await apiRemoveCartItem(itemId);
+    await mutate();
+  };
+
+  const clearCart = async () => {
+    await apiClearCart();
+    await mutate();
+  };
+
+  return {
+    cart: data,
+    isLoading,
+    error,
+    addToCart,
+    updateCartItem,
+    removeCartItem,
+    clearCart,
+  };
 }

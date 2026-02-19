@@ -164,7 +164,7 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
             </div>
           )}
 
-          <AddToCartButton />
+          <AddToCartButton productId={product.id} inStock={inStock} />
 
           {product.sku && (
             <p className="text-sm text-neutral-500 mt-4">SKU: {product.sku}</p>

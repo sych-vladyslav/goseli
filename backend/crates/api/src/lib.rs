@@ -70,6 +70,7 @@ pub fn build_router(state: Arc<AppState>) -> Router {
     Router::new()
         .route("/health", get(health_check))
         .merge(handlers::auth::routes())
+        .merge(handlers::cart::routes())
         .merge(handlers::products::routes())
         .merge(handlers::categories::routes())
         .layer(TraceLayer::new_for_http())
