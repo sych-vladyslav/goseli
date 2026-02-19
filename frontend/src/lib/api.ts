@@ -3,6 +3,9 @@ import type {
   PaginatedResponse,
   ProductListParams,
   Category,
+  CartResponse,
+  AddToCartRequest,
+  UpdateCartItemRequest,
 } from '@/lib/types';
 
 export class ApiError extends Error {
@@ -70,4 +73,45 @@ export function formatPrice(cents: number): string {
     style: 'currency',
     currency: 'USD',
   }).format(cents / 100);
+}
+
+export async function getCart(): Promise<CartResponse> {
+  return fetchApi<CartResponse>(`${API_BASE}/api/v1/cart`, {
+    credentials: 'include',
+  });
+}
+
+export async function addToCart(
+  request: AddToCartRequest,
+): Promise<CartResponse> {
+  return fetchApi<CartResponse>(`${API_BASE}/api/v1/cart/items`, {
+    method: 'POST',
+    body: JSON.stringify(request),
+    credentials: 'include',
+  });
+}
+
+export async function updateCartItem(
+  itemId: string,
+  request: UpdateCartItemRequest,
+): Promise<CartResponse> {
+  return fetchApi<CartResponse>(`${API_BASE}/api/v1/cart/items/${itemId}`, {
+    method: 'PUT',
+    body: JSON.stringify(request),
+    credentials: 'include',
+  });
+}
+
+export async function removeCartItem(itemId: string): Promise<void> {
+  await fetch(`${API_BASE}/api/v1/cart/items/${itemId}`, {
+    method: 'DELETE',
+    credentials: 'include',
+  });
+}
+
+export async function clearCart(): Promise<void> {
+  await fetch(`${API_BASE}/api/v1/cart`, {
+    method: 'DELETE',
+    credentials: 'include',
+  });
 }

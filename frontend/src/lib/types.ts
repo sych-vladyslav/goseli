@@ -87,3 +87,33 @@ export interface ProductListParams {
   sort?: ProductSort;
   q?: string;
 }
+
+export interface CartItemResponse {
+  id: string;
+  product_id: string;
+  variant_id: string | null;
+  product_name: string;
+  product_slug: string;
+  product_image_url: string | null;
+  variant_name: string | null;
+  price: number;
+  quantity: number;
+  subtotal: number;
+}
+
+export interface CartResponse {
+  id: string;
+  items: CartItemResponse[];
+  total: number;
+  item_count: number;
+}
+
+export interface AddToCartRequest {
+  product_id: string;
+  variant_id?: string | null;
+  quantity: number;
+}
+
+export interface UpdateCartItemRequest {
+  quantity: number;
+}
